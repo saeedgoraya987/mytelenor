@@ -97,7 +97,7 @@ export default function Home({ initialQuestions = [] }) {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
   const openTelegram = () =>
-    window.open("https://t.me/YourTelegram", "_blank", "noopener,noreferrer");
+    window.open("https://t.me/+D31lQW3IoG01MGI0", "_blank", "noopener,noreferrer");
 
   return (
     <>
