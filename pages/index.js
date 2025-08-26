@@ -144,7 +144,7 @@ export default function Home({ initialQuestions = [] }) {
               <div className="question">
                 Q{i + 1}: {q?.question || "Not found"}
               </div>
-              {q?.answer && <div className="answer">{q.answer}</div>}
+              {q?.answer && <div className="answer">Answer: {q.answer}</div>}
             </div>
           ))
         ) : (
