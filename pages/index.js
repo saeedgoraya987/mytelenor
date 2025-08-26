@@ -1,6 +1,8 @@
 
+// pages/index.js
 import { useEffect, useState } from "react";
- // global CSS
+import Head from "next/head";   // ✅ required
+// ❌ Do NOT import globals.css here (it lives in pages/_app.js)
 
 export default function Home() {
   const [questions, setQuestions] = useState([]);
