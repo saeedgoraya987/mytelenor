@@ -164,10 +164,10 @@ export default function Home({ initialQuestions = [] }) {
 
         <div className={`fab-options ${menuOpen ? "show" : ""}`}>
           <button title="Youtube" onClick={openYoutube} aria-label="Open Youtube">
-            <i className="fas fa-youtube" />
+            <i className="fa fa-youtube" />
           </button>
           <button title="Telegram" onClick={openTelegram} aria-label="Open Telegram">
-            <i className="fab fa-telegram" />
+            <i className="fa fa-telegram" />
           </button>
         </div>
       </div>
