@@ -1,82 +1,100 @@
+// pages/index.js
 import { useEffect, useState } from "react";
+import Head from "next/head"; // for <title> and meta
+import "../styles/globals.css"; // global CSS
 
 export default function Home() {
-  const [quiz, setQuiz] = useState({ title: "", questions: [] });
+  const [questions, setQuestions] = useState([]);
+  const [menuOpen, setMenuOpen] = useState(false);
 
+  // Fetch quiz
   useEffect(() => {
-    fetch("/api/quiz")
-      .then(res => res.json())
-      .then(data => setQuiz(data))
-      .catch(() => setQuiz({ title: "Error loading quiz", questions: [] }));
+    async function fetchData() {
+      try {
+        const res = await fetch("/api/quiz");
+        const data = await res.json();
+        setQuestions(data.questions || []);
+      } catch (err) {
+        console.error("Error fetching quiz:", err);
+      }
+    }
+    fetchData();
   }, []);
 
-  // Progress bar updater
+  // Progress bar animation
   useEffect(() => {
-    function updateProgress() {
-      const now = new Date();
-      const start = new Date();
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(start);
-      end.setDate(end.getDate() + 1);
-      const percent = ((now - start) / (end - start)) * 100;
-      const bar = document.querySelector(".progress-fill");
-      if (bar) bar.style.width = percent + "%";
-    }
-    updateProgress();
-    const interval = setInterval(updateProgress, 1000);
+    const bar = document.querySelector(".progress-fill");
+    if (!bar) return;
+    let width = 0;
+    const interval = setInterval(() => {
+      width = (width + 1) % 100;
+      bar.style.width = `${width}%`;
+    }, 1000);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div>
-      <header className="header">
+    <>
+      <Head>
+        <title>Telenor Quiz Fetcher</title>
+        <meta name="description" content="Daily Telenor Quiz Answers" />
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        />
+      </Head>
+
+      {/* Header */}
+      <header className="header" id="top">
         <div className="header-content">
-          <img src="/telenor.svg" alt="Telenor" className="logo" />
-          <span>Telenor Quiz Fetcher</span>
+          <img src="/telenor-logo.svg" alt="Telenor" className="logo" />
+          <h1>Telenor Quiz Fetcher</h1>
         </div>
         <div className="progress-bar">
           <div className="progress-fill"></div>
         </div>
       </header>
 
+      {/* Questions */}
       <main className="container">
-        {quiz.questions.length > 0 ? (
-          quiz.questions.map((q, i) => (
-            <div key={i} className="question-card" onClick={e => e.currentTarget.classList.toggle("open")}>
-              <div className="question">Q{i + 1}: {q.question}</div>
-              <div className="answer"><i className="fa-solid fa-check-circle"></i> {q.answer}</div>
+        {questions.length > 0 ? (
+          questions.map((q, i) => (
+            <div className="question-card" key={i}>
+              <div className="question">
+                Q{i + 1}: {q.question || "Not found"}
+              </div>
+              {q.answer && <div className="answer">{q.answer}</div>}
             </div>
           ))
         ) : (
-          <p>⚠️ No quiz data available</p>
+          <p className="no-data">No quiz found</p>
         )}
       </main>
 
-      {/* Floating Action Button */}
-      <div className="fab">
-        <div className="fab-options" id="fabOptions">
-          <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}><i className="fa-solid fa-arrow-up"></i></button>
-          <button onClick={() => window.open("https://t.me/yourtelegram", "_blank")}><i className="fa-brands fa-telegram"></i></button>
-        </div>
-        <button className="fab-main" id="fabMain" onClick={() => {
-          const fabOptions = document.getElementById("fabOptions");
-          const fabMain = document.getElementById("fabMain").querySelector("i");
-          fabOptions.classList.toggle("show");
-          if (fabOptions.classList.contains("show")) {
-            fabMain.classList.remove("fa-ellipsis");
-            fabMain.classList.add("fa-times");
-          } else {
-            fabMain.classList.remove("fa-times");
-            fabMain.classList.add("fa-ellipsis");
-          }
-        }}>
-          <i className="fa-solid fa-ellipsis"></i>
+      {/* Floating menu */}
+      <div className="fab-container">
+        <button
+          className={`fab ${menuOpen ? "open" : ""}`}
+          onClick={() => setMenuOpen(!menuOpen)}
+        >
+          {menuOpen ? <i className="fas fa-times"></i> : <i className="fas fa-ellipsis-h"></i>}
         </button>
+        {menuOpen && (
+          <div className="fab-options">
+            <a href="#top" className="fab-btn" title="Go Top">
+              <i className="fas fa-arrow-up"></i>
+            </a>
+            <a href="https://t.me/YourTelegram" target="_blank" className="fab-btn" title="Telegram">
+              <i className="fab fa-telegram"></i>
+            </a>
+          </div>
+        )}
       </div>
 
-      <footer>© {new Date().getFullYear()} Telenor Quiz — Saeed Ahmed</footer>
-
-
-    </div>
+      {/* Footer */}
+      <footer className="footer">
+        © 2025 Telenor Quiz — Saeed Ahmed
+      </footer>
+    </>
   );
 }
