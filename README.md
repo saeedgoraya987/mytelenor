@@ -15,7 +15,16 @@ A simple **Next.js** application that fetches the daily Telenor quiz questions a
 
 ## 📂 Project Structure
 
-. ├── pages │   ├── api │   │   └── quiz.js          # API endpoint for scraping quiz data │   ├── _app.js              # Global CSS imports │   └── index.js             # Main page with SSR and UI logic ├── public │   └── telenor.svg          # App logo ├── styles │   └── globals.css          # Global styles and FAB design └── README.md
+├── pages │   
+├── api │   
+│   └── quiz.js          # API endpoint for scraping quiz data 
+│   ├── _app.js              # Global CSS imports │   
+└── index.js             # Main page with SSR and UI logic 
+├── public │   
+└── telenor.svg          # App logo 
+├── styles 
+│   └── globals.css          # Global styles and FAB design 
+└── README.md
 
 ---
 
@@ -24,9 +33,9 @@ A simple **Next.js** application that fetches the daily Telenor quiz questions a
 1. **Clone this repository**
 ```bash
 git clone https://github.com/your-username/telenor-quiz-fetcher.git
-cd telenor-quiz-fetcher
+cd telenor-quiz-fetcher```
 
-2. Install dependencies
+2. **Install dependencies**
 
 
 
