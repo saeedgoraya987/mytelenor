@@ -121,9 +121,7 @@ export default function Home({ initialQuestions = [] }) {
         >
           <div className="progress-fill"></div>
         </div>
-        <div style={{ fontSize: 12, opacity: 0.9, marginTop: 6 }}>
-          Day progress (Asia/Karachi): {dayPct.toFixed(1)}% — Time to midnight: {timeLeft}
-        </div>
+        
       </header>
 
       {/* Questions grid */}
