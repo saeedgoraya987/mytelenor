@@ -163,13 +163,13 @@ export default function Home({ initialQuestions = [] }) {
         </button>
 
         <div className={`fab-options ${menuOpen ? "show" : ""}`}>
-          <button title="Youtube" onClick={openYoutube} aria-label="Open Youtube">
-            <i className="fab fa-youtube" />
-          </button>
-          <button title="Telegram" onClick={openTelegram} aria-label="Open Telegram">
-            <i className="fab fa-telegram" />
-          </button>
-        </div>
+  <button title="Youtube" onClick={openYoutube} aria-label="Open Youtube">
+    <i className="fab fa-youtube"></i>
+  </button>
+  <button title="Telegram" onClick={openTelegram} aria-label="Open Telegram">
+    <i className="fab fa-telegram"></i>
+  </button>
+</div>
       </div>
 
       {/* Footer */}
