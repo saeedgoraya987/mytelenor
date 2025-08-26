@@ -1,12 +1,11 @@
-
 // pages/index.js
 import { useEffect, useState } from "react";
-import Head from "next/head";   // ✅ required
-// ❌ Do NOT import globals.css here (it lives in pages/_app.js)
+import Head from "next/head"; // keep this!
 
 export default function Home() {
   const [questions, setQuestions] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [openCards, setOpenCards] = useState(new Set());
 
   // Fetch quiz
   useEffect(() => {
@@ -34,6 +33,27 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  const toggleCard = (idx) => {
+    setOpenCards((prev) => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx);
+      else next.add(idx);
+      return next;
+    });
+  };
+
+  const scrollToTop = () => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const openTelegram = () => {
+    if (typeof window !== "undefined") {
+      window.open("https://t.me/YourTelegram", "_blank", "noopener,noreferrer");
+    }
+  };
+
   return (
     <>
       <Head>
@@ -45,26 +65,36 @@ export default function Home() {
         />
       </Head>
 
-      {/* Header */}
-      <header className="header" id="top">
+      {/* Header (sticky) */}
+      <header id="top">
         <div className="header-content">
           <img src="/telenor-logo.svg" alt="Telenor" className="logo" />
-          <h1>Telenor Quiz Fetcher</h1>
+          <span>Telenor Quiz Fetcher</span>
         </div>
         <div className="progress-bar">
           <div className="progress-fill"></div>
         </div>
       </header>
 
-      {/* Questions */}
+      {/* Questions grid */}
       <main className="container">
         {questions.length > 0 ? (
           questions.map((q, i) => (
-            <div className="question-card" key={i}>
-              <div className="question">
-                Q{i + 1}: {q.question || "Not found"}
-              </div>
-              {q.answer && <div className="answer">{q.answer}</div>}
+            <div
+              className={`question-card ${openCards.has(i) ? "open" : ""}`}
+              key={i}
+              onClick={() => toggleCard(i)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  toggleCard(i);
+                }
+              }}
+            >
+              <div className="question">Q{i + 1}: {q?.question || "Not found"}</div>
+              {q?.answer && <div className="answer">{q.answer}</div>}
             </div>
           ))
         ) : (
@@ -72,30 +102,28 @@ export default function Home() {
         )}
       </main>
 
-      {/* Floating menu */}
-      <div className="fab-container">
+      {/* Floating Action Button */}
+      <div className="fab">
         <button
-          className={`fab ${menuOpen ? "open" : ""}`}
-          onClick={() => setMenuOpen(!menuOpen)}
+          className="fab-main"
+          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          onClick={() => setMenuOpen((v) => !v)}
         >
-          {menuOpen ? <i className="fas fa-times"></i> : <i className="fas fa-ellipsis-h"></i>}
+          {menuOpen ? <i className="fas fa-times" /> : <i className="fas fa-ellipsis-h" />}
         </button>
-        {menuOpen && (
-          <div className="fab-options">
-            <a href="#top" className="fab-btn" title="Go Top">
-              <i className="fas fa-arrow-up"></i>
-            </a>
-            <a href="https://t.me/YourTelegram" target="_blank" className="fab-btn" title="Telegram">
-              <i className="fab fa-telegram"></i>
-            </a>
-          </div>
-        )}
+
+        <div className={`fab-options ${menuOpen ? "show" : ""}`}>
+          <button title="Go Top" onClick={scrollToTop} aria-label="Go to top">
+            <i className="fas fa-arrow-up" />
+          </button>
+          <button title="Telegram" onClick={openTelegram} aria-label="Open Telegram">
+            <i className="fab fa-telegram" />
+          </button>
+        </div>
       </div>
 
       {/* Footer */}
-      <footer className="footer">
-        © 2025 Telenor Quiz — Saeed Ahmed
-      </footer>
+      <footer>© 2025 Telenor Quiz — Saeed Ahmed</footer>
     </>
   );
 }
