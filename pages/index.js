@@ -1,4 +1,4 @@
-// pages/index.js
+
 import { useEffect, useState } from "react";
 import Head from "next/head"; // for <title> and meta
 import "../styles/globals.css"; // global CSS
