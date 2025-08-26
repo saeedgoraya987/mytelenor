@@ -118,8 +118,6 @@ export default function Home({ initialQuestions = [] }) {
         </div>
         <div
           className="progress-bar"
-          aria-label="Day progress in Asia/Karachi"
-          title={`Ends in ${timeLeft}`}
         >
           <div className="progress-fill"></div>
         </div>
