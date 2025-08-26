@@ -95,7 +95,7 @@ export default function Home({ initialQuestions = [] }) {
       return next;
     });
 
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+  const openYoutube = () => window.open("hhttps://youtube.com/@zulfiqaraligoraya4?feature=shared", "_blank", "noopener,noreferrer");
   const openTelegram = () =>
     window.open("https://t.me/+D31lQW3IoG01MGI0", "_blank", "noopener,noreferrer");
 
@@ -163,8 +163,8 @@ export default function Home({ initialQuestions = [] }) {
         </button>
 
         <div className={`fab-options ${menuOpen ? "show" : ""}`}>
-          <button title="Go Top" onClick={scrollToTop} aria-label="Go to top">
-            <i className="fas fa-arrow-up" />
+          <button title="Youtube" onClick={openYoutube} aria-label="Open Youtube">
+            <i className="fas fa-youtube" />
           </button>
           <button title="Telegram" onClick={openTelegram} aria-label="Open Telegram">
             <i className="fab fa-telegram" />
