@@ -68,7 +68,7 @@ export default function Home() {
       {/* Header (sticky) */}
       <header id="top">
         <div className="header-content">
-          <img src="/telenor-logo.svg" alt="Telenor" className="logo" />
+          <img src="/telenor.svg" alt="Telenor" className="logo" />
           <span>Telenor Quiz Fetcher</span>
         </div>
         <div className="progress-bar">
