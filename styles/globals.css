@@ -55,6 +55,8 @@
         box-shadow: 0 6px 20px rgba(0,0,0,0.1);
         transition: transform 0.2s, box-shadow 0.2s;
         cursor: pointer;
+        outline: none;
+        -webkit-tap-highlight-color: transparent;
     }
     .question-card:hover {
         transform: translateY(-5px);
@@ -67,6 +69,8 @@
         transition: max-height 0.4s ease, padding 0.3s ease;
         color: var(--success);
         font-weight: 600;
+        outline: none;
+        -webkit-tap-highlight-color: transparent;
     }
     .question-card.open .answer { max-height: 200px; padding-top: 10px; }
 
@@ -77,6 +81,8 @@
     bottom: 20px;
     right: 20px;
     z-index: 9999; /* Always on top */
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .fab-main, .fab-options button {
@@ -90,6 +96,8 @@
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     transition: transform 0.3s, opacity 0.3s;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
     .fab-options {
@@ -103,11 +111,15 @@
         pointer-events: none;
         transform: translateY(20px);
         transition: all 0.3s ease;
+        outline: none;
+        -webkit-tap-highlight-color: transparent;
     }
     .fab-options.show {
         opacity: 1;
         pointer-events: auto;
         transform: translateY(0);
+        outline: none;
+        -webkit-tap-highlight-color: transparent;
     }
     footer {
         text-align: center;
