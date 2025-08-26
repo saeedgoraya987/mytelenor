@@ -1,4 +1,4 @@
-// pages/index.js
+ // pages/index.js
 import { useEffect, useState } from "react";
 import Head from "next/head";
 
@@ -163,9 +163,6 @@ export default function Home({ initialQuestions = [] }) {
         </button>
 
         <div className={`fab-options ${menuOpen ? "show" : ""}`}>
-  <button title="Youtube" onClick={openYoutube} aria-label="Open Youtube">
-    <i className="fab fa-youtube"></i>
-  </button>
   <button title="Telegram" onClick={openTelegram} aria-label="Open Telegram">
     <i className="fab fa-telegram"></i>
   </button>
