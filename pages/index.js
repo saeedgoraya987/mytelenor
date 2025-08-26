@@ -1,7 +1,6 @@
 
 import { useEffect, useState } from "react";
-import Head from "next/head"; // for <title> and meta
-import "../styles/globals.css"; // global CSS
+ // global CSS
 
 export default function Home() {
   const [questions, setQuestions] = useState([]);
