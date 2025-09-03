@@ -28,22 +28,35 @@ export default async function handler(req, res) {
     const html = await response.text();
     const $ = cheerio.load(html);
 
-    const title =
-      $('meta[property="og:title"]').attr("content")?.trim() ||
-      $("title").text().trim() ||
-      "Telenor Quiz";
-
-    // ---------- helpers ----------
     const norm = (s = "") => s.replace(/\s+/g, " ").trim();
     const isQuestion = (t) => /^(?:Question|Q)\s*\d*\s*[:.)-]?\s*/i.test(t);
     const cleanQ = (t) => norm(t.replace(/^(?:Question|Q)\s*\d*\s*[:.)-]?\s*/i, ""));
     const isExplicitAnswer = (t) => /^(?:Answer|Ans)\s*[:.)-]?\s*/i.test(t);
     const cleanA = (t) => norm(t.replace(/^(?:Answer|Ans)\s*[:.)-]?\s*/i, ""));
 
-    // Many posts put answers in lists or bold. Consider these as answer candidates.
-    const looksLikeOption = (t) =>
-      /^([A-D][\).:-]|[①-⑩🅐-🅩])\s*/i.test(t) || // A) A. ① 🅐 etc.
-      /^[\-\•]\s+/.test(t);
+    // --- SAFE option/bullet detector (no astral ranges) ---
+    // Matches:
+    //   A) A. A: A-   (also lower-case)
+    //   (1) 1) 1. 1:
+    //   ① ② ③ ④ ⑤ ⑥ ⑦ ⑧ ⑨ ⑩
+    //   • - ▪ ● bullets
+    const looksLikeOption = (t) => {
+      if (!t) return false;
+      // Letter options A-D (expand if needed)
+      if (/^\s*[A-Da-d]\s*[\)\.\:\-]\s+/u.test(t)) return true;
+      // Numbered options
+      if (/^\s*\(?\d{1,2}\)?\s*[\)\.\:\-]?\s+/u.test(t)) return true;
+      // Circled digits ①..⑩
+      if (/^\s*[①②③④⑤⑥⑦⑧⑨⑩]\s+/u.test(t)) return true;
+      // Common bullets
+      if (/^\s*[\-\•▪●]\s+/u.test(t)) return true;
+      return false;
+    };
+
+    const title =
+      $('meta[property="og:title"]').attr("content")?.trim() ||
+      $("title").text().trim() ||
+      "Telenor Quiz";
 
     // Collect ordered blocks with tag context
     const blocks = [];
@@ -62,76 +75,81 @@ export default async function handler(req, res) {
       const q = cleanQ(blk.text);
       let ans = "";
 
-      // Scan forward until next question or max window
-      const windowEnd = Math.min(i + 20, blocks.length); // generous window
+      // scan forward until next question or a max window
+      const windowEnd = Math.min(i + 20, blocks.length);
       const windowBlocks = [];
-
       for (let j = i + 1; j < windowEnd; j++) {
-        if (isQuestion(blocks[j].text)) break; // stop at next question
+        if (isQuestion(blocks[j].text)) break;
         windowBlocks.push(blocks[j]);
       }
 
-      // 1) Prefer explicit "Answer:" lines
+      // 1) explicit Answer:
       const explicit = windowBlocks.find((b) => isExplicitAnswer(b.text));
       if (explicit) ans = cleanA(explicit.text);
 
-      // 2) Otherwise, first strong/bold after Q
+      // 2) bold/strong immediately after
       if (!ans) {
-        const bold = windowBlocks.find((b) => (b.tag === "strong" || b.tag === "b") && b.text.length > 1);
+        const bold = windowBlocks.find(
+          (b) => (b.tag === "strong" || b.tag === "b") && b.text.length > 1
+        );
         if (bold) ans = norm(bold.text.replace(/^Correct\s*[:\-]?\s*/i, ""));
       }
 
-      // 3) Otherwise, first list item that looks like an option
+      // 3) list-looking option
       if (!ans) {
-        const opt = windowBlocks.find((b) => b.tag === "li" && looksLikeOption(b.text));
+        const opt = windowBlocks.find((b) => (b.tag === "li" || b.tag === "p") && looksLikeOption(b.text));
         if (opt) {
-          // Sometimes list lines are like "A) Islamabad". Drop the "A) "
-          ans = norm(opt.text.replace(/^([A-D][\).:-]\s*)/i, ""));
+          ans = norm(
+            opt.text
+              .replace(/^\s*[A-Da-d]\s*[\)\.\:\-]\s+/, "")
+              .replace(/^\s*\(?\d{1,2}\)?\s*[\)\.\:\-]?\s+/, "")
+          );
         }
       }
 
-      // 4) Otherwise, first meaningful paragraph after Q
+      // 4) first non-empty paragraph
       if (!ans) {
         const para = windowBlocks.find((b) => b.tag === "p" && b.text.length > 2);
         if (para) ans = cleanA(para.text);
       }
 
-      // Fallback
       if (!ans) ans = "Answer not found";
-
       questions.push({ question: q, answer: ans });
     }
 
-    // Secondary fallback (rare): if nothing collected, try a simple adjacent selector scan
+    // secondary fallback if needed
     if (questions.length === 0) {
       $("h3,h4,strong,b,p").each((_, el) => {
         const t = norm($(el).text());
-        if (isQuestion(t) && questions.length < 5) {
-          const q = cleanQ(t);
-          let ans = "Answer not found";
-          const sibs = $(el).nextAll("p,li,strong,b").slice(0, 10);
-          for (let k = 0; k < sibs.length; k++) {
-            const s = norm($(sibs[k]).text());
-            if (!s) continue;
-            if (isExplicitAnswer(s)) {
-              ans = cleanA(s);
-              break;
-            }
-            if (looksLikeOption(s) || $(sibs[k]).prop("tagName")?.toLowerCase() === "strong") {
-              ans = norm(s.replace(/^([A-D][\).:-]\s*)/i, ""));
-              break;
-            }
-            if ($(sibs[k]).prop("tagName")?.toLowerCase() === "p" && s.length > 2) {
-              ans = cleanA(s);
-              break;
-            }
+        if (!isQuestion(t) || questions.length >= 5) return;
+        const q = cleanQ(t);
+        let ans = "Answer not found";
+        const sibs = $(el).nextAll("p,li,strong,b").slice(0, 10);
+        for (let k = 0; k < sibs.length; k++) {
+          const s = norm($(sibs[k]).text());
+          if (!s) continue;
+          if (isExplicitAnswer(s)) {
+            ans = cleanA(s);
+            break;
           }
-          questions.push({ question: q, answer: ans });
+          if (looksLikeOption(s)) {
+            ans = norm(
+              s
+                .replace(/^\s*[A-Da-d]\s*[\)\.\:\-]\s+/, "")
+                .replace(/^\s*\(?\d{1,2}\)?\s*[\)\.\:\-]?\s+/, "")
+            );
+            break;
+          }
+          const tag = $(sibs[k]).prop("tagName")?.toLowerCase();
+          if (tag === "strong" || tag === "b" || tag === "p") {
+            ans = cleanA(s);
+            break;
+          }
         }
+        questions.push({ question: q, answer: ans });
       });
     }
 
-    // De-duplicate empty/noisy answers
     const cleaned = questions
       .map((qa) => ({
         question: qa.question,
