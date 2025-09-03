@@ -34,22 +34,17 @@ export default async function handler(req, res) {
     const isExplicitAnswer = (t) => /^(?:Answer|Ans)\s*[:.)-]?\s*/i.test(t);
     const cleanA = (t) => norm(t.replace(/^(?:Answer|Ans)\s*[:.)-]?\s*/i, ""));
 
-    // --- SAFE option/bullet detector (no astral ranges) ---
-    // Matches:
-    //   A) A. A: A-   (also lower-case)
-    //   (1) 1) 1. 1:
-    //   ① ② ③ ④ ⑤ ⑥ ⑦ ⑧ ⑨ ⑩
-    //   • - ▪ ● bullets
+    // SAFE option/bullet detector (no invalid escapes or astral ranges)
     const looksLikeOption = (t) => {
       if (!t) return false;
-      // Letter options A-D (expand if needed)
-      if (/^\s*[A-Da-d]\s*[\)\.\:\-]\s+/u.test(t)) return true;
-      // Numbered options
-      if (/^\s*\(?\d{1,2}\)?\s*[\)\.\:\-]?\s+/u.test(t)) return true;
+      // Letter options A-D: "A)", "A.", "A:" or "A-"
+      if (/^\s*[A-Da-d]\s*[).:-]\s+/.test(t)) return true;
+      // Numbered options: "(1)", "1)", "1.", "1:"
+      if (/^\s*\(?\d{1,2}\)?\s*[).:-]?\s+/.test(t)) return true;
       // Circled digits ①..⑩
-      if (/^\s*[①②③④⑤⑥⑦⑧⑨⑩]\s+/u.test(t)) return true;
+      if (/^\s*[①②③④⑤⑥⑦⑧⑨⑩]\s+/.test(t)) return true;
       // Common bullets
-      if (/^\s*[\-\•▪●]\s+/u.test(t)) return true;
+      if (/^\s*[-•▪●]\s+/.test(t)) return true;
       return false;
     };
 
@@ -87,27 +82,25 @@ export default async function handler(req, res) {
       const explicit = windowBlocks.find((b) => isExplicitAnswer(b.text));
       if (explicit) ans = cleanA(explicit.text);
 
-      // 2) bold/strong immediately after
+      // 2) bold/strong
       if (!ans) {
-        const bold = windowBlocks.find(
-          (b) => (b.tag === "strong" || b.tag === "b") && b.text.length > 1
-        );
+        const bold = windowBlocks.find((b) => (b.tag === "strong" || b.tag === "b") && b.text.length > 1);
         if (bold) ans = norm(bold.text.replace(/^Correct\s*[:\-]?\s*/i, ""));
       }
 
-      // 3) list-looking option
+      // 3) list-looking option (li/p)
       if (!ans) {
         const opt = windowBlocks.find((b) => (b.tag === "li" || b.tag === "p") && looksLikeOption(b.text));
         if (opt) {
           ans = norm(
             opt.text
-              .replace(/^\s*[A-Da-d]\s*[\)\.\:\-]\s+/, "")
-              .replace(/^\s*\(?\d{1,2}\)?\s*[\)\.\:\-]?\s+/, "")
+              .replace(/^\s*[A-Da-d]\s*[).:-]\s+/, "")
+              .replace(/^\s*\(?\d{1,2}\)?\s*[).:-]?\s+/, "")
           );
         }
       }
 
-      // 4) first non-empty paragraph
+      // 4) first paragraph
       if (!ans) {
         const para = windowBlocks.find((b) => b.tag === "p" && b.text.length > 2);
         if (para) ans = cleanA(para.text);
@@ -117,7 +110,7 @@ export default async function handler(req, res) {
       questions.push({ question: q, answer: ans });
     }
 
-    // secondary fallback if needed
+    // Secondary fallback if nothing found
     if (questions.length === 0) {
       $("h3,h4,strong,b,p").each((_, el) => {
         const t = norm($(el).text());
@@ -135,8 +128,8 @@ export default async function handler(req, res) {
           if (looksLikeOption(s)) {
             ans = norm(
               s
-                .replace(/^\s*[A-Da-d]\s*[\)\.\:\-]\s+/, "")
-                .replace(/^\s*\(?\d{1,2}\)?\s*[\)\.\:\-]?\s+/, "")
+                .replace(/^\s*[A-Da-d]\s*[).:-]\s+/, "")
+                .replace(/^\s*\(?\d{1,2}\)?\s*[).:-]?\s+/, "")
             );
             break;
           }
